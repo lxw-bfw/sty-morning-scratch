@@ -1,0 +1,65 @@
+---
+description: Vue 3 + Vite + TypeScript 项目编码规范与推荐写法
+globs: "**/*.{vue,ts,tsx}"
+alwaysApply: false
+---
+
+# Vue 3 + Vite + TypeScript 编码规范
+
+## 组件与 SFC
+
+- 优先使用 **`<script setup lang="ts">`** + **Composition API**，避免 Options API 新代码。
+- SFC 推荐顺序：**`<script setup>` → `<template>` → `<style>`**；样式默认 **`scoped`**，全局样式集中管理并注明用途。
+- 组件文件名用 **PascalCase**（如 `UserCard.vue`）；在模板中多单词组件可用 **PascalCase** 或 **kebab-case**，同一项目内保持一致。
+
+## TypeScript
+
+- 开启并遵守 **`strict`**；避免无必要的 **`any`**，用 **`unknown`** + 收窄或明确接口/类型。
+- **`defineProps` / `defineEmits`** 使用泛型或运行时声明 + TypeScript 类型，保证 props、事件名与载荷可查。
+- 从 **`props`** 解构时使用 **`toRefs`** 或 **`props.xxx`**，避免丢失响应式。
+
+## 逻辑复用与目录
+
+- 可复用无 UI 逻辑放在 **`composables/`**（或项目约定目录），命名 **`useXxx`**，返回值用 **`ref`/`computed`/对象** 语义清晰。
+- API、常量、类型分层：**`api/`**、**`types/`**、**`constants/`**（按项目实际调整），避免在组件内堆叠大块业务逻辑。
+
+## Vite 与工程化
+
+- 客户端环境变量必须使用 **`VITE_`** 前缀；在代码中用 **`import.meta.env`** 读取，不把密钥写入前端包。
+- 路由级、大组件用 **动态 `import()`** 做按需加载；静态资源大文件放 **`public/`** 或按构建需求配置。
+- **`vite.config.ts`** 中与路径相关的配置（如 **`resolve.alias`**）与 **`tsconfig` paths** 保持一致，避免混用魔法相对路径。
+
+## 模板与性能
+
+- 列表渲染必须有稳定 **`key`**；避免在模板中调用重计算函数，用 **`computed`**。
+- 条件渲染优先 **`v-if` / `v-show`** 语义正确即可；大列表考虑虚拟列表等方案（按需求引入）。
+
+## 反例与正例
+
+```vue
+<!-- ❌ BAD：script 未标注 ts、默认导出 + Options API 混用新代码 -->
+<script>
+export default { props: ['userId'] }
+</script>
+```
+
+```vue
+<!-- ✅ GOOD：script setup + 类型明确的 props -->
+<script setup lang="ts">
+const props = defineProps<{ userId: string }>()
+</script>
+```
+
+```typescript
+// ❌ BAD
+const data: any = await fetch('/api').then((r) => r.json())
+
+// ✅ GOOD
+interface UserDto { id: string; name: string }
+const data = (await fetch('/api').then((r) => r.json())) as UserDto
+```
+
+## 协作约定
+
+- 修改公共类型、路由、环境变量或构建配置时，同步更新调用方与 **README/团队文档**（若有）。
+- 仅改与任务相关的文件，不顺带大范围格式化无关代码；与现有项目风格保持一致。

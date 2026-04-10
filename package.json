@@ -1,0 +1,27 @@
+{
+  "name": "sty-morning-scratch",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vueuse/core": "^12.8.2",
+    "canvas-confetti": "^1.9.4",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@tailwindcss/vite": "^4.1.4",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vue/tsconfig": "^0.7.0",
+    "tailwindcss": "^4.1.4",
+    "typescript": "~5.7.3",
+    "vite": "^6.2.4",
+    "vue-tsc": "^2.2.8"
+  }
+}

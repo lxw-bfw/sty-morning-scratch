@@ -1,0 +1,55 @@
+---
+description: 函数设计规范 - 单一职责与完整注释
+alwaysApply: true
+---
+
+# 函数设计规范
+
+## 函数注释格式
+
+每个功能函数必须包含 JSDoc 注释，说明功能、参数和返回值：
+
+```typescript
+// ❌ 缺少注释
+function formatPrice(price: number, currency: string) {
+  return new Intl.NumberFormat('zh-CN', { style: 'currency', currency }).format(price);
+}
+
+// ✅ 包含完整注释
+/**
+ * 将数字金额格式化为指定货币的本地化字符串
+ * @param price - 原始金额（单位：分或最小货币单位）
+ * @param currency - ISO 4217 货币代码，如 'CNY'、'USD'
+ * @returns 格式化后的货币字符串，如 "¥1,234.56"
+ */
+function formatPrice(price: number, currency: string): string {
+  return new Intl.NumberFormat('zh-CN', { style: 'currency', currency }).format(price);
+}
+```
+
+## 单一职责原则
+
+- 每个函数只做一件事，函数名能清晰描述其职责
+- 若函数超过 30 行，考虑是否可以拆分
+- 避免"上帝函数"：处理数据、渲染 UI、发请求全在一个函数里
+
+```typescript
+// ❌ 职责混乱
+async function handleSubmit(data) {
+  const cleaned = data.name.trim();          // 数据处理
+  await fetch('/api/submit', { body: ... }); // 网络请求
+  router.push('/success');                   // 路由跳转
+  toast('提交成功');                          // UI 反馈
+}
+
+// ✅ 职责清晰，各司其职
+const sanitizeFormData = (data) => ({ ...data, name: data.name.trim() });
+const submitForm = async (data) => fetch('/api/submit', { body: JSON.stringify(data) });
+
+async function handleSubmit(data) {
+  const cleaned = sanitizeFormData(data);
+  await submitForm(cleaned);
+  router.push('/success');
+  toast('提交成功');
+}
+```

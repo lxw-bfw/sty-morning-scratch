@@ -1,0 +1,87 @@
+---
+description: UI 开发规范 - 移动端优先与响应式设计
+alwaysApply: true
+---
+
+# UI 响应式设计规范
+
+## 移动端优先原则
+
+始终从最小屏幕尺寸开始设计，再通过断点扩展到更大屏幕：
+
+```tsx
+// ❌ 桌面优先（需要覆写样式）
+<div className="flex-row md:flex-col px-16 md:px-4">
+
+// ✅ 移动优先（逐步增强）
+<div className="flex-col px-4 md:flex-row md:px-8 lg:px-16">
+```
+
+## Tailwind 断点顺序
+
+编写类名时遵循从小到大的顺序：`base → sm → md → lg → xl → 2xl`
+
+## 常见响应式场景
+
+- 布局：移动端单列 → 桌面多列（`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`）
+- 字体：移动端较小，桌面适当放大（`text-sm md:text-base lg:text-lg`）
+- 间距：移动端紧凑，桌面宽松（`p-4 md:p-6 lg:p-8`）
+- 隐藏/显示：`hidden md:block` 或 `block md:hidden`
+
+## 触控体验
+
+- 可点击元素最小触控区域不低于 44×44px
+- 移动端避免 hover-only 的交互，优先使用 active/focus 状态
+
+---
+
+## TailwindCSS v4 最佳实践
+
+### CSS 变量优先，避免硬编码值
+
+```tsx
+// ❌ 任意值（arbitrary value）— 难以维护
+<div className="text-[#1a2b3c] mt-[13px] w-[327px]">
+
+// ✅ 使用设计系统 token 或 CSS 变量
+<div className="text-primary mt-3 w-full max-w-sm">
+```
+
+### 类名组织顺序（可读性）
+
+建议按以下顺序排列：布局 → 尺寸 → 间距 → 样式 → 交互
+
+```tsx
+// 推荐顺序示例
+<div className="flex items-center gap-2  w-full max-w-md  px-4 py-2  bg-white rounded-lg border  hover:bg-gray-50 transition-colors">
+```
+
+### `@apply` 仅用于高频复用
+
+`@apply` 仅在需要跨多个地方复用同一组类时使用，不要为了"好看"而提前抽象：
+
+```css
+/* ✅ 高频复用的按钮基础样式 */
+.btn-base {
+  @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors;
+}
+```
+
+### v4 语法
+
+使用 `@import "tailwindcss"` 替代旧的三行指令，主题扩展通过 `@theme` 在 CSS 中定义，无需在 tailwind.config.js 中定义：
+
+```css
+/* ❌ v3 旧写法 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ✅ v4 写法 */
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6;
+  --font-sans: "Inter", sans-serif;
+}
+```

@@ -1,0 +1,77 @@
+# 推送到 main（含合并 PR）后：构建并将 dist 同步到宝塔服务器目录
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-sty-morning-scratch
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # 可在 Settings → Environments → production 中配置保护规则、审批人等（可选）
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Configure SSH known_hosts
+        env:
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          if [ -n "$DEPLOY_KNOWN_HOSTS" ]; then
+            echo "$DEPLOY_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          elif [ -n "$DEPLOY_HOST" ]; then
+            ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          else
+            echo "Missing DEPLOY_HOST or DEPLOY_KNOWN_HOSTS" >&2
+            exit 1
+          fi
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Rsync dist to server
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          set -euo pipefail
+          REMOTE_PATH="/www/wwwroot/sty-morning-scratch/dist/"
+          EXTRA_PORT=""
+          if [ -n "${DEPLOY_PORT:-}" ]; then
+            EXTRA_PORT="-p ${DEPLOY_PORT}"
+          fi
+          # --delete：移除服务器上已不在本次构建产物中的旧文件，避免 Vite 带 hash 的旧 chunk 长期堆积
+          rsync -avz --delete \
+            -e "ssh ${EXTRA_PORT} -o BatchMode=yes -o StrictHostKeyChecking=yes" \
+            ./dist/ \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_PATH}"

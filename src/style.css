@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+/* 主壳一屏展示，避免出现整页纵向滚动条（弹窗等为 fixed，不受影响） */
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+#app {
+  height: 100%;
+  overflow: hidden;
+}
+
+@theme {
+  --font-sans: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --color-candy-mint: #9fe8d8;
+  --color-candy-peach: #ffc9b9;
+  --color-candy-lilac: #d4c4f5;
+  --color-candy-butter: #ffe9a8;
+  --color-candy-rose: #ff8fab;
+  --color-candy-sky: #a8d8ff;
+}
